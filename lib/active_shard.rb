@@ -83,7 +83,16 @@ module ActiveShard
     def shards_by_schema( schema_name )
       config.shards_by_schema( schema_name )
     end
-    
+
+    def logger
+      @logger
+    end
+
+    def logger=(val)
+      @logger = val
+    end
+
   end
 end
 
+ActiveSupport.run_load_hooks(:active_shard, ActiveShard) if defined?(ActiveSupport)

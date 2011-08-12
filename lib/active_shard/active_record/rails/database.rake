@@ -1,9 +1,4 @@
 namespace :shards do
-  task :load_config => :rails_env do
-    #require 'active_record'
-    #ActiveRecord::Base.configurations = Rails.application.config.database_configuration
-  end
-
   desc "Migrate the database (options: VERSION=x, VERBOSE=false)."
   task :migrate, [:shard_name] => :environment do |t, args|
     shard_name  = args[:shard_name].to_sym
@@ -13,46 +8,57 @@ namespace :shards do
     ActiveRecord::Base.schema_name( schema )
 
     ActiveShard.with( shard_name ) do
-
-      Rails.logger.info( "Migrating #{shard_name} as #{schema}" )
-
       ActiveRecord::Migration.verbose = ENV["VERBOSE"] ? ENV["VERBOSE"] == "true" : true
       ActiveRecord::Migrator.migrate("db/migrate/#{schema}/", ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
       Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
-
     end
   end
 
   namespace :migrate do
     # desc  'Rollbacks the database one migration and re migrate up (options: STEP=x, VERSION=x).'
-    task :redo => :environment do
+    task :redo, [:shard_name] => :environment do |t, args|
       if ENV["VERSION"]
-        Rake::Task["db:migrate:down"].invoke
-        Rake::Task["db:migrate:up"].invoke
+        Rake::Task["db:migrate:down"].invoke(*args.values)
+        Rake::Task["db:migrate:up"].invoke(*args.values)
       else
-        Rake::Task["db:rollback"].invoke
-        Rake::Task["db:migrate"].invoke
+        Rake::Task["db:rollback"].invoke(*args.values)
+        Rake::Task["db:migrate"].invoke(*args.values)
       end
     end
 
-#    # desc 'Resets your database using your migrations for the current environment'
-#    task :reset => ["db:drop", "db:create", "db:migrate"]
-#
-#    # desc 'Runs the "up" for a given migration VERSION.'
-#    task :up => :environment do
-#      version = ENV["VERSION"] ? ENV["VERSION"].to_i : nil
-#      raise "VERSION is required" unless version
-#      ActiveRecord::Migrator.run(:up, "db/migrate/", version)
-#      Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
-#    end
-#
-#    # desc 'Runs the "down" for a given migration VERSION.'
-#    task :down => :environment do
-#      version = ENV["VERSION"] ? ENV["VERSION"].to_i : nil
-#      raise "VERSION is required" unless version
-#      ActiveRecord::Migrator.run(:down, "db/migrate/", version)
-#      Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
-#    end
+    # desc 'Runs the "up" for a given migration VERSION.'
+    task :up, [:shard_name] => :environment do |t, args|
+      version = ENV["VERSION"] ? ENV["VERSION"].to_i : nil
+      raise "VERSION is required" unless version
+
+      shard_name  = args[:shard_name].to_sym
+      schema      = ActiveShard.config.shard( shard_name ).schema.to_sym
+
+      ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
+      ActiveRecord::Base.schema_name( schema )
+
+      ActiveShard.with( shard_name ) do
+        ActiveRecord::Migrator.run(:up, "db/migrate/#{schema}", version)
+        Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
+      end
+    end
+
+    # desc 'Runs the "down" for a given migration VERSION.'
+    task :down, [:shard_name] => :environment do |t, args|
+      version = ENV["VERSION"] ? ENV["VERSION"].to_i : nil
+      raise "VERSION is required" unless version
+
+      shard_name  = args[:shard_name].to_sym
+      schema      = ActiveShard.config.shard( shard_name ).schema.to_sym
+
+      ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
+      ActiveRecord::Base.schema_name( schema )
+
+      ActiveShard.with( shard_name ) do
+        ActiveRecord::Migrator.run(:down, "db/migrate/#{schema}", version)
+        Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
+      end
+    end
 #
 #    desc "Display status of migrations"
 #    task :status => :environment do
@@ -85,19 +91,37 @@ namespace :shards do
 #    end
 #  end
 #
-#  desc 'Rolls the schema back to the previous version (specify steps w/ STEP=n).'
-#  task :rollback => :environment do
-#    step = ENV['STEP'] ? ENV['STEP'].to_i : 1
-#    ActiveRecord::Migrator.rollback('db/migrate/', step)
-#    Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
-#  end
-#
-#  # desc 'Pushes the schema to the next version (specify steps w/ STEP=n).'
-#  task :forward => :environment do
-#    step = ENV['STEP'] ? ENV['STEP'].to_i : 1
-#    ActiveRecord::Migrator.forward('db/migrate/', step)
-#    Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
-#  end
+  desc 'Rolls the schema back to the previous version (specify steps w/ STEP=n).'
+  task :rollback, [:shard_name] => :environment do |t, args|
+    step = ENV['STEP'] ? ENV['STEP'].to_i : 1
+
+    shard_name  = args[:shard_name].to_sym
+    schema      = ActiveShard.config.shard( shard_name ).schema.to_sym
+
+    ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
+    ActiveRecord::Base.schema_name( schema )
+
+    ActiveShard.with( shard_name ) do
+      ActiveRecord::Migrator.rollback('db/migrate/', step)
+      Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
+    end
+  end
+
+  # desc 'Pushes the schema to the next version (specify steps w/ STEP=n).'
+  task :forward, [:shard_name] => :environment do |t, args|
+    step = ENV['STEP'] ? ENV['STEP'].to_i : 1
+
+    shard_name  = args[:shard_name].to_sym
+    schema      = ActiveShard.config.shard( shard_name ).schema.to_sym
+
+    ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
+    ActiveRecord::Base.schema_name( schema )
+
+    ActiveShard.with( shard_name ) do
+      ActiveRecord::Migrator.forward('db/migrate/', step)
+      Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
+    end
+  end
 #
 #  # desc 'Drops and recreates the database from db/schema.rb for the current environment and loads the seeds.'
 #  task :reset => [ 'db:drop', 'db:setup' ]

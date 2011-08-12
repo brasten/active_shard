@@ -13,4 +13,3 @@ module ActiveShard
 
   end
 end
-

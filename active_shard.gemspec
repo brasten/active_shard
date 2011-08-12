@@ -10,12 +10,9 @@ Gem::Specification.new do |s|
   s.required_ruby_version     = '>= 1.8.7'
   s.required_rubygems_version = ">= 1.3.6"
 
-  s.author            = 'Brasten Sager'
-  s.email             = 'brasten@dashwire.com'
+  s.authors             = ['Brasten Sager', 'Matt Baker']
+  s.email               = ['brasten@dashwire.com', 'matt@dashwire.com']
 
   s.files             = Dir[ 'CHANGELOG', 'README.rdoc', 'lib/**/*.rb' ]
   s.require_path      = 'lib'
-  s.extra_rdoc_files  = %w( README.rdoc )
-  
-  #s.add_dependency('activerecord',   '>= 3.0.0')
 end
