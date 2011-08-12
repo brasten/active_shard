@@ -1,0 +1,43 @@
+production:
+  directories:
+    directory:
+      adapter: mysql2
+      encoding: utf8
+      database: dir_db
+      username: root
+
+  data:
+    db1:
+      adapter: mysql2
+      encoding: utf8
+      database: db1_db
+      username: root
+
+    db2:
+      adapter: mysql2
+      encoding: utf8
+      database: db2_db
+      username: root
+
+    db3:
+      adapter: mysql2
+      encoding: utf8
+      database: db3_db
+      username: root
+
+development:
+  directories:
+    directory:
+      adapter: mysql2
+      encoding: utf8
+      database: dir_db_development
+      username: root
+
+  data:
+    db1:
+      adapter: mysql2
+      encoding: utf8
+      database: db1_db_development
+      username: root
+
+
