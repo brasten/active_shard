@@ -35,23 +35,28 @@ module ActiveShard
     # @param [Hash] active_shards
     #
     def push( active_shards )
-      Rails.logger.debug "Scope#push( #{active_shards.inspect} )"
       scope_crumbs << active_shards
 
-      # shortcutting "build_current_shards"
-      current_shards.merge!( normalize_keys( active_shards ) )
+      # shortcutting #build_current_shards for performance reasons
+      if active_shards.is_a?(Symbol)
+        # if active_shards is a Symbol, ALL schemas are using active shard
+        current_shards.keys.each do |schema|
+          current_shards[schema] = active_shards
+        end
+        current_shards[AnyShard] = active_shards
+
+      else
+        current_shards.merge!( normalize_keys( active_shards ) )
+      end
     end
 
     # Remove the last scope from the stack
     #
     def pop( pop_until=nil )
-      Rails.logger.debug "Scope#pop( )"
-
       if pop_until.nil?
         scope_crumbs.pop
       else
         (scope_crumbs.size - scope_crumbs.index(pop_until)).times do
-          Rails.logger.debug "-- popping!"
           scope_crumbs.pop
         end
       end
@@ -66,7 +71,7 @@ module ActiveShard
     # @return [Symbol, nil] current active shard for schema
     #
     def active_shard_for_schema( schema_name )
-      current_shards[ schema_name.to_sym ]
+      current_shards[ schema_name.to_sym ] || current_shards[ AnyShard ]
     end
 
     private
@@ -83,7 +88,17 @@ module ActiveShard
         current_shards.clear
 
         crumbs.each do |crumb|
-          crumb.each_pair { |schema, shard| current_shards[ schema.to_sym ] = shard.to_sym }
+          case crumb
+          when Symbol
+
+            current_shards.keys.each do |schema|
+              current_shards[schema] = crumb
+            end
+            current_shards[AnyShard] = crumb
+          when Hash
+
+            crumb.each_pair { |schema, shard| current_shards[ schema.to_sym ] = shard.to_sym }
+          end
         end
 
         current_shards
@@ -96,6 +111,8 @@ module ActiveShard
 
         ret
       end
+
+      class AnyShard; end
 
   end
 end
