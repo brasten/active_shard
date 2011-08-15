@@ -30,25 +30,25 @@ module ActiveShard
         end
       end
 
-  ActiveShard.config do |c|
-    definitions = ActiveShard::ShardDefinition.from_yaml_file( File.expand_path( '../shards.yml', __FILE__ ) )
-
-    definitions[ Rails.env.to_sym ].each do |shard|
-      c.add_shard( shard )
-    end
-  end
-
-  require 'active_shard/active_record'
-
-  ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
-
-  ActiveRecord::Base.connection_handler =
-    ActiveShard::ActiveRecord::ConnectionHandler.new(
-      ActiveShard.config.shard_definitions,
-      :shard_lookup => ActiveShard::ShardLookupHandler.new( :scope => ActiveShard.scope, :config => ActiveShard.config )
-    )
-
-  ActiveRecord::Base.schema_name( :main )
+  # ActiveShard.config do |c|
+  #   definitions = ActiveShard::ShardDefinition.from_yaml_file( File.expand_path( '../shards.yml', __FILE__ ) )
+  # 
+  #   definitions[ Rails.env.to_sym ].each do |shard|
+  #     c.add_shard( shard )
+  #   end
+  # end
+  # 
+  # require 'active_shard/active_record'
+  # 
+  # ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
+  # 
+  # ActiveRecord::Base.connection_handler =
+  #   ActiveShard::ActiveRecord::ConnectionHandler.new(
+  #     ActiveShard.config.shard_definitions,
+  #     :shard_lookup => ActiveShard::ShardLookupHandler.new( :scope => ActiveShard.scope, :config => ActiveShard.config )
+  #   )
+  # 
+  # ActiveRecord::Base.schema_name( :main )
 
 
     end

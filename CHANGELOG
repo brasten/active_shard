@@ -1,4 +1,7 @@
-## 0.1.0.alpha ##
+## 0.1.1 ##
+- bug in Railtie prevented gem from working
+
+## 0.1.0 ##
 
 - initial release of code and gem
 - includes working code base, missing completed railtie, better specs.
