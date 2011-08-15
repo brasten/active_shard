@@ -50,8 +50,6 @@ module ActiveShard
         schema_name = klass.schema_name
 
         active_shard_name = shard_lookup.lookup_active_shard( schema_name )
-
-        Rails.logger.debug( "RetrieveConnectionPool for #{klass.name}, schema_name #{schema_name}, active_shard #{active_shard_name}")
         
         ( active_shard_name.nil? ?
             schema_pools[ schema_name.to_sym ] :
