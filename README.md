@@ -202,6 +202,7 @@ To better understand what's happening here, see ActiveShard::Scope.
 Migrations for each schema must reside in a directory under db/migrate that corresponds to the schema name.
 
 Example:
+
     db/migrate/main
       20110810103523_create_users_table.rb
     db/migrate/directories
@@ -237,8 +238,8 @@ There are several, but Octopus (ar-octopus) is the most popular.
 
 ## Authors ##
 
-Brasten Sager ( brasten@dashwire.com )
-Matt Baker ( matt@dashwire.com )
+- Brasten Sager ( brasten@dashwire.com )
+- Matt Baker ( matt@dashwire.com )
 
 ## Copyright
 
