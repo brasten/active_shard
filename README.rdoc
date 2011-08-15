@@ -1,1 +1,0 @@
-Currently in active internal development. Will post some kind of initial code shortly.
