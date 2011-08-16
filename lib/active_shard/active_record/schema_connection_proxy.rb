@@ -1,8 +1,13 @@
+require 'active_support/core_ext/module/delegation'
 require 'active_shard/exceptions'
 
 module ActiveShard
   module ActiveRecord
-    class SchemaConnectionAdapter
+
+    # SchemaConnectionProxy holds a Connection object and restricts messages passed
+    # to it. Only schema-ish messages are allowed.
+    #
+    class SchemaConnectionProxy
 
       delegate :columns, :verify, :verify!, :run_callbacks, :quote_table_name, :quote_value, :quote, :to => :target
 

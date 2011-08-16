@@ -4,8 +4,6 @@ require 'active_record/connection_adapters/abstract/connection_pool'
 module ActiveShard
   module ActiveRecord
 
-    autoload :SchemaConnectionPool, 'active_shard/active_record/schema_connection_pool'
-
     class ConnectionHandler < ::ActiveRecord::ConnectionAdapters::ConnectionHandler
 
       # Used to look up shard names
@@ -62,27 +60,11 @@ module ActiveShard
         attr_reader :schema_pools
 
         def new_schema_pool( definition )
-          schema_pool_class.new(
-              connection_specification_class.new( definition.connection_spec, definition.adapter_method )
-            )
+          ConnectionProxyPool.new( ConnectionSpecificationAdapter.new(definition), :proxy_class => SchemaConnectionProxy )
         end
 
         def new_connection_pool( definition )
-          connection_pool_class.new(
-            connection_specification_class.new( definition.connection_spec, definition.adapter_method )
-          )
-        end
-
-        def connection_pool_class
-          ::ActiveRecord::ConnectionAdapters::ConnectionPool
-        end
-
-        def schema_pool_class
-          SchemaConnectionPool
-        end
-
-        def connection_specification_class
-          ::ActiveRecord::Base::ConnectionSpecification
+          ConnectionProxyPool.new( ConnectionSpecificationAdapter.new(definition) )
         end
 
         def connection_pool_id( schema_name, shard_name )

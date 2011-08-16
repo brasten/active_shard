@@ -59,38 +59,7 @@ namespace :shards do
         Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
       end
     end
-#
-#    desc "Display status of migrations"
-#    task :status => :environment do
-#      config = ActiveRecord::Base.configurations[Rails.env || 'development']
-#      ActiveRecord::Base.establish_connection(config)
-#      unless ActiveRecord::Base.connection.table_exists?(ActiveRecord::Migrator.schema_migrations_table_name)
-#        puts 'Schema migrations table does not exist yet.'
-#        next  # means "return" for rake task
-#      end
-#      db_list = ActiveRecord::Base.connection.select_values("SELECT version FROM #{ActiveRecord::Migrator.schema_migrations_table_name}")
-#      file_list = []
-#      Dir.foreach(File.join(Rails.root, 'db', 'migrate')) do |file|
-#        # only files matching "20091231235959_some_name.rb" pattern
-#        if match_data = /(\d{14})_(.+)\.rb/.match(file)
-#          status = db_list.delete(match_data[1]) ? 'up' : 'down'
-#          file_list << [status, match_data[1], match_data[2]]
-#        end
-#      end
-#      # output
-#      puts "\ndatabase: #{config['database']}\n\n"
-#      puts "#{"Status".center(8)}  #{"Migration ID".ljust(14)}  Migration Name"
-#      puts "-" * 50
-#      file_list.each do |file|
-#        puts "#{file[0].center(8)}  #{file[1].ljust(14)}  #{file[2].humanize}"
-#      end
-#      db_list.each do |version|
-#        puts "#{'up'.center(8)}  #{version.ljust(14)}  *** NO FILE ***"
-#      end
-#      puts
-#    end
-#  end
-#
+
   desc 'Rolls the schema back to the previous version (specify steps w/ STEP=n).'
   task :rollback, [:shard_name] => :environment do |t, args|
     step = ENV['STEP'] ? ENV['STEP'].to_i : 1
@@ -122,44 +91,11 @@ namespace :shards do
       Rake::Task["db:schema:dump"].invoke if ActiveRecord::Base.schema_format == :ruby
     end
   end
-#
-#  # desc 'Drops and recreates the database from db/schema.rb for the current environment and loads the seeds.'
-#  task :reset => [ 'db:drop', 'db:setup' ]
-#
-#  # desc "Retrieves the charset for the current environment's database"
-#  task :charset => :environment do
-#    config = ActiveRecord::Base.configurations[Rails.env || 'development']
-#    case config['adapter']
-#    when /mysql/
-#      ActiveRecord::Base.establish_connection(config)
-#      puts ActiveRecord::Base.connection.charset
-#    when 'postgresql'
-#      ActiveRecord::Base.establish_connection(config)
-#      puts ActiveRecord::Base.connection.encoding
-#    when 'sqlite3'
-#      ActiveRecord::Base.establish_connection(config)
-#      puts ActiveRecord::Base.connection.encoding
-#    else
-#      $stderr.puts 'sorry, your database adapter is not supported yet, feel free to submit a patch'
-#    end
-#  end
-#
-#  # desc "Retrieves the collation for the current environment's database"
-#  task :collation => :environment do
-#    config = ActiveRecord::Base.configurations[Rails.env || 'development']
-#    case config['adapter']
-#    when /mysql/
-#      ActiveRecord::Base.establish_connection(config)
-#      puts ActiveRecord::Base.connection.collation
-#    else
-#      $stderr.puts 'sorry, your database adapter is not supported yet, feel free to submit a patch'
-#    end
-#  end
-#
-#  desc "Retrieves the current schema version number"
-#  task :version => :environment do
-#    puts "Current version: #{ActiveRecord::Migrator.current_version}"
-#  end
+
+  desc "Retrieves the current schema version number"
+  task :version => :environment do
+    puts "Current version: #{ActiveRecord::Migrator.current_version}"
+  end
 #
 #  # desc "Raises an error if there are pending migrations"
 #  task :abort_if_pending_migrations => :environment do

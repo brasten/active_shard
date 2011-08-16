@@ -71,10 +71,6 @@ module ActiveShard
       @connection_spec  = symbolize_keys( opts )
     end
 
-    def adapter_method
-      "#{connection_spec[:adapter]}_connection"
-    end
-
     def connection_spec
       @connection_spec ||= {}
     end

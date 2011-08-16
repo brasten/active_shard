@@ -4,6 +4,7 @@ module ActiveShard
   autoload :ScopeManager,         'active_shard/scope_manager'
   autoload :ShardLookupHandler,   'active_shard/shard_lookup_handler'
   autoload :ShardCollection,      'active_shard/shard_collection'
+  autoload :ShardDefinition,      'active_shard/shard_definition'
 
   class << self
 
