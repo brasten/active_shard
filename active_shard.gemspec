@@ -13,6 +13,6 @@ Gem::Specification.new do |s|
   s.authors             = ['Brasten Sager', 'Matt Baker']
   s.email               = ['brasten@dashwire.com', 'matt@dashwire.com']
 
-  s.files             = Dir[ 'CHANGELOG', 'README.md', 'lib/**/*.rb' ]
+  s.files             = Dir[ 'README.md', 'lib/**/*.rb' ]
   s.require_path      = 'lib'
 end
