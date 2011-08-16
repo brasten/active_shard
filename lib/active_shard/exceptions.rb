@@ -6,11 +6,12 @@ module ActiveShard
   # than nesting.
   #
 
+  # Base exception for all ActiveShard errors
+  #
   class ActiveShardError < StandardError; end
 
     class DefinitionError < ActiveShardError; end
       class NameNotUniqueError < DefinitionError; end
-
     class NoActiveShardError < ActiveShardError; end
 
 end

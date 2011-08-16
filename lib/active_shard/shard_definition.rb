@@ -15,9 +15,31 @@ module ActiveShard
       # @return [Hash] hash of environments and lists of Definitions
       #
       def from_yaml_file( file_name )
-        definitions = {}
+        from_yaml( File.open( file_name ).read() )
+      end
 
-        hash = YAML.load( ERB.new( File.open( file_name ).read() ).result )
+      # Returns a hash with environments as the hash keys and
+      # a list of ShardDefinitions as the hash values
+      #
+      # @param [String] yaml YAML string to parse
+      #
+      # @return [Hash] hash of environments and lists of Definitions
+      #
+      def from_yaml( yaml )
+        hash = YAML.load( ERB.new( yaml ).result )
+
+        from_hash( hash )
+      end
+
+      # Returns a hash with environments as the hash keys and
+      # a list of ShardDefinitions as the hash values
+      #
+      # @param [Hash] hash raw hash in YAML-format
+      #
+      # @return [Hash] hash of environments and lists of Definitions
+      #
+      def from_hash( hash )
+        definitions = {}
 
         hash.each_pair do |environment, schemas|
           schemas.each_pair do |schema, shards|

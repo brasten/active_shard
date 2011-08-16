@@ -52,6 +52,9 @@ module ActiveShard
 
     # Remove the last scope from the stack
     #
+    # FIXME: Symbols (for AnySchema) may not roll back properly if multiple
+    #        the same symbol is on the stack several times
+    #
     def pop( pop_until=nil )
       if pop_until.nil?
         scope_crumbs.pop

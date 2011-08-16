@@ -23,6 +23,10 @@ describe ActiveShard::ShardDefinition do
       @definition.schema.should == 'schema_one'
     end
 
+    it "should belong to schema 'schema_one'" do
+      @definition.belongs_to_schema?( :schema_one ).should be_true
+    end
+
     it "should have connection spec with host: 'host1' and adapter: 'mysql2'" do
       @definition.connection_spec[:host].should == 'host1'
       @definition.connection_spec[:adapter].should == 'mysql2'

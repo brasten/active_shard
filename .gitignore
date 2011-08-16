@@ -2,3 +2,5 @@
 .rspec
 .idea
 pkg
+.bundle
+coverage

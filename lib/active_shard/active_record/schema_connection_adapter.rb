@@ -4,10 +4,10 @@ module ActiveShard
   module ActiveRecord
     class SchemaConnectionAdapter
 
-      delegate :columns, :verify, :verify!, :run_callbacks, :quote_table_name, :quote_value, :quote, :to => :adapter
+      delegate :columns, :verify, :verify!, :run_callbacks, :quote_table_name, :quote_value, :quote, :to => :target
 
-      def initialize( adapter )
-        @adapter = adapter
+      def initialize( target )
+        @target = target
       end
 
       def method_missing( sym, *args, &block )
@@ -15,8 +15,8 @@ module ActiveShard
       end
 
       private
-        def adapter
-          @adapter
+        def target
+          @target
         end
     end
   end

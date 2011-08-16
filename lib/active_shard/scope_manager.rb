@@ -17,7 +17,7 @@ module ActiveShard
     #   scope instances
     #
     def initialize( options={} )
-      @scope_class = options[:scope_class] if options[:scope_class]
+      self.scope_class = options[:scope_class] if options[:scope_class]
     end
 
     # @see ActiveShard::Scope#push
