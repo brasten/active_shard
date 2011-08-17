@@ -1,12 +1,28 @@
-module ActiveShard
+require 'active_support'
 
-  autoload :Config,               'active_shard/config'
-  autoload :ScopeManager,         'active_shard/scope_manager'
-  autoload :ShardLookupHandler,   'active_shard/shard_lookup_handler'
-  autoload :ShardCollection,      'active_shard/shard_collection'
-  autoload :ShardDefinition,      'active_shard/shard_definition'
+module ActiveShard
+  extend ActiveSupport::Autoload
+
+  autoload :Config
+  autoload :Scope
+  autoload :ScopeManager
+  autoload :ShardCollection
+  autoload :ShardDefinition
+  autoload :ShardLookupHandler
 
   class << self
+
+    def environment=( val )
+      env_changed = !( @environment.to_s == val.to_s )
+
+      @environment = val.nil? ? nil : val.to_sym
+
+      reload_observer_shards! if env_changed
+    end
+
+    def environment
+      @environment
+    end
 
     # Returns the current Config object for ActiveShard.
     #
@@ -14,12 +30,70 @@ module ActiveShard
     #
     # @return [Config] current config
     #
-    def config()
+    def config
       @config ||= Config.new
 
       yield( @config ) if block_given?
 
       @config
+    end
+
+    def base_schema_name=(val)
+      @base_schema_name = val.nil? ? nil : val.to_sym
+    end
+
+    def base_schema_name
+      @base_schema_name
+    end
+
+    def shard_configuration=( configuration )
+      config.shard_configuration=( configuration )
+
+      reload_observer_shards!
+    end
+
+    # Doesn't yet support anything other than ActiveRecord::Base
+    #
+    #def base_class=(val)
+    #  @base_class = val
+    #end
+    #
+    #def base_class
+    #  @base_class
+    #end
+
+    def notify_shard_observers( message, *args )
+      shard_observers.each do |observer|
+        observer.public_send( message, *args ) if observer.respond_to?( message )
+      end
+    end
+
+    def add_shard_observer( observer )
+      shard_observers << observer
+    end
+
+    def shard_observers
+      @shard_observers ||= []
+    end
+
+    def add_shard( *args )
+      definition = args.first.is_a?( ShardDefinition ) ? args.first : ShardDefinition.new( *args )
+
+      config.add_shard( environment, definition )
+
+      notify_shard_observers( :add_shard, definition )
+
+      definition
+    end
+
+    def shard_definitions
+      config.shard_definitions( environment )
+    end
+
+    def remove_shard( shard_name )
+      config.remove_shard( environment, shard_name )
+
+      notify_shard_observers( :remove_shard, shard_name )
     end
 
     # Sets the current scope handling object.
@@ -91,6 +165,11 @@ module ActiveShard
 
     def logger=(val)
       @logger = val
+    end
+
+    def reload_observer_shards!
+      notify_shard_observers( :remove_all_shards! )
+      notify_shard_observers( :add_shards, shard_definitions )
     end
 
   end
