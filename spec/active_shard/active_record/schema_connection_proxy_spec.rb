@@ -32,6 +32,18 @@ module ActiveShard::ActiveRecord
       @proxy.run_callbacks
     end
 
+    it "should delegate :_run_checkin_callbacks to target" do
+      @mock.should_receive( :_run_checkin_callbacks )
+
+      @proxy._run_checkin_callbacks
+    end
+
+    it "should delegate :disconnect! to target" do
+      @mock.should_receive( :disconnect! )
+
+      @proxy.disconnect!
+    end
+
     it "should delegate :quote_table_name to target" do
       @mock.should_receive( :quote_table_name )
 

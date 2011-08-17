@@ -9,7 +9,15 @@ module ActiveShard
     #
     class SchemaConnectionProxy
 
-      delegate :columns, :verify, :verify!, :run_callbacks, :quote_table_name, :quote_value, :quote, :to => :target
+      delegate :columns,
+               :verify,
+               :verify!,
+               :run_callbacks,
+               :_run_checkin_callbacks,
+               :quote_table_name,
+               :quote_value,
+               :disconnect!,
+               :quote, :to => :target
 
       def initialize( target )
         @target = target

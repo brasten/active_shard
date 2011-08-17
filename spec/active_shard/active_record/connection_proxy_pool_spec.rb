@@ -26,6 +26,15 @@ module ActiveShard::ActiveRecord
           subject.should be_an_instance_of( SchemaConnectionProxy )
         end
       end
+
+      describe "#disconnect!" do
+        it "should run without blowing up" do
+          lambda do
+            pool.disconnect!
+          end.should_not raise_error
+        end
+
+      end
     end
   end
 
