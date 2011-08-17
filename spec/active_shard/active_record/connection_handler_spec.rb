@@ -45,7 +45,9 @@ EOY
         end
 
         let :handler do
-          ConnectionHandler.new( shard_definitions, :shard_lookup => lookup_handler )
+          h = ConnectionHandler.new( :shard_lookup => lookup_handler )
+          h.add_shards( shard_definitions )
+          h
         end
 
         { :schema_one   => :shard_one,

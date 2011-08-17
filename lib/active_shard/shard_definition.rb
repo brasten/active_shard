@@ -66,8 +66,8 @@ module ActiveShard
     def initialize( name, options={} )
       opts = options.dup
 
-      @name             = name
-      @schema           = opts.delete( :schema )
+      @name             = name.to_sym
+      @schema           = ( ( sch = opts.delete( :schema ) ).nil? ? nil : sch.to_sym )
       @connection_spec  = symbolize_keys( opts )
     end
 
@@ -86,6 +86,16 @@ module ActiveShard
       return false if ( schema.nil? || schema_name.nil? )
 
       ( schema.to_sym == schema_name.to_sym )
+    end
+
+    def ==( other )
+      eql?( other )
+    end
+
+    def eql?( other )
+      (self.name == other.name) &&
+        (self.schema == other.schema) &&
+        (self.connection_spec == other.connection_spec)
     end
 
     private

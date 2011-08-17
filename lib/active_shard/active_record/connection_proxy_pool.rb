@@ -1,6 +1,7 @@
 require 'active_record'
 require 'active_record/connection_adapters/abstract/connection_pool'
-require 'active_shard/active_record/schema_connection_proxy'
+
+require 'active_shard/active_record/connection_specification_adapter'
 
 module ActiveShard
   module ActiveRecord
@@ -9,13 +10,16 @@ module ActiveShard
     #
     class ConnectionProxyPool < ::ActiveRecord::ConnectionAdapters::ConnectionPool
 
-      # @param [#adapter_method,#config] spec
+      attr_reader :shard_definition
+
+      # @param [ShardDefinition] definition
       # @param [Hash] options
       # @option options [Class] :proxy_class
       #
-      def initialize( spec, options={} )
-        super( spec )
+      def initialize( definition, options={} )
+        super( ConnectionSpecificationAdapter.new( definition ) )
 
+        @shard_definition = definition
         @proxy_class = options[:proxy_class]
       end
 

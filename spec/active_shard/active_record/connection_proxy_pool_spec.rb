@@ -16,10 +16,7 @@ module ActiveShard::ActiveRecord
                                             :adapter  => 'sqlite3',
                                             :database => "#{ARTIFACTS_PATH}/shard_one.db" )
 
-        ConnectionProxyPool.new(
-          ConnectionSpecificationAdapter.new( shard_definition ),
-          :proxy_class => SchemaConnectionProxy
-        )
+        ConnectionProxyPool.new( shard_definition, :proxy_class => SchemaConnectionProxy )
       end
 
       describe "#connection" do
