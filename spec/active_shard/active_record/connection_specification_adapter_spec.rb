@@ -18,7 +18,8 @@ module ActiveShard::ActiveRecord
     end
 
     specify "#config should == { adapter: :sqlite3, database: '#{ARTIFACTS_PATH}/shard_one.db' }" do
-      adapter.config.should == { :adapter => :sqlite3, :database => "#{ARTIFACTS_PATH}/shard_one.db" }
+      adapter.config[:adapter].should == :sqlite3
+      adapter.config[:database].should =="#{ARTIFACTS_PATH}/shard_one.db"
     end
 
   end

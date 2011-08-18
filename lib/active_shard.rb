@@ -12,6 +12,15 @@ module ActiveShard
 
   class << self
 
+    def with_environment( val )
+      previous_environment = self.environment
+      self.environment = val
+
+      yield
+
+      self.environment = previous_environment
+    end
+
     def environment=( val )
       env_changed = !( @environment.to_s == val.to_s )
 
@@ -86,14 +95,18 @@ module ActiveShard
       definition
     end
 
-    def shard_definitions
-      config.shard_definitions( environment )
-    end
-
     def remove_shard( shard_name )
       config.remove_shard( environment, shard_name )
 
       notify_shard_observers( :remove_shard, shard_name )
+    end
+
+    def shard_definitions
+      config.shard_definitions( environment )
+    end
+
+    def shard( shard_name )
+      config.shard( environment, shard_name )
     end
 
     # Sets the current scope handling object.

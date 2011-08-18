@@ -1,9 +1,10 @@
+require 'active_support/hash_with_indifferent_access'
+
 module ActiveShard
 
   class ShardDefinition
     attr_accessor :schema
     attr_accessor :name
-    attr_writer :connection_spec
 
     class << self
 
@@ -66,9 +67,21 @@ module ActiveShard
     def initialize( name, options={} )
       opts = options.dup
 
-      @name             = name.to_sym
-      @schema           = ( ( sch = opts.delete( :schema ) ).nil? ? nil : sch.to_sym )
-      @connection_spec  = symbolize_keys( opts )
+      @name                 = name.to_sym
+      @schema               = ( ( sch = opts.delete( :schema ) ).nil? ? nil : sch.to_sym )
+      self.connection_spec  = opts
+    end
+
+    def connection_adapter
+      @connection_adapter ||= connection_spec[:adapter]
+    end
+    
+    def connection_database
+      @connection_database ||= connection_spec[:database]
+    end
+
+    def connection_spec=(val)
+      @connection_spec = val.nil? ? nil : HashWithIndifferentAccess.new( val )
     end
 
     def connection_spec

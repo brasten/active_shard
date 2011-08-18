@@ -11,6 +11,7 @@ module ActiveShard
   # in most situations.
   #
   class ShardCollection
+    include Enumerable
 
     # Initializes a shard group
     #
@@ -84,6 +85,10 @@ module ActiveShard
       self.class.new( definitions_by_schema( schema_name ) )
     end
 
+    def schemas
+      definitions.map { |d| d.schema }.uniq.compact
+    end
+
     # Removes a shard definition from the collection based on the
     # provided shard name.
     #
@@ -117,6 +122,18 @@ module ActiveShard
     #
     def any_shard
       definitions[ rand( definitions.size ) ].name
+    end
+    
+    def each( &block )
+      definitions.each( &block )
+    end
+
+    def length
+      definitions.length
+    end
+
+    def size
+      length
     end
 
     private
