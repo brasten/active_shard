@@ -23,12 +23,4 @@ RSpec.configure do |config|
       ex.run
     end
   end
-
-  config.around(:all) do |ex|
-    ActiveShard.with_environment( :test ) do
-      ActiveShard.with( :directories => :directory, :main => :db1 ) do
-        ex.run
-      end
-    end
-  end
 end
