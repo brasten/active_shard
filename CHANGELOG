@@ -1,3 +1,8 @@
+## 0.2.0 ##
+- major refactoring to support multiple environments
+- initial working Railtie implementation
+- database.rake tasks
+
 ## 0.1.1 ##
 - bug in Railtie prevented gem from working
 
