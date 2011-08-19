@@ -6,6 +6,7 @@ Gem::Specification.new do |s|
   s.version     = ActiveShard::VERSION
   s.summary     = 'Sharding library for ActiveRecord'
   s.description = 'ActiveShard is a library that implements flexible sharding in ActiveRecord and Rails.'
+  s.homepage    = 'https://github.com/dashwire/active_shard'
 
   s.required_ruby_version     = '>= 1.8.7'
   s.required_rubygems_version = ">= 1.3.6"
