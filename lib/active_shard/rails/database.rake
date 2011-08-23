@@ -4,7 +4,8 @@ namespace :shards do
     with_shard( args ) do |shard_name, schema|
       ActiveRecord::Migration.verbose = ENV["VERBOSE"] ? ENV["VERBOSE"] == "true" : true
       ActiveRecord::Migrator.migrate("db/migrate/#{schema}/", ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
-      Rake::Task["shards:schema:dump"].invoke( shard_name ) if ActiveRecord::Base.schema_format == :ruby
+
+      dump_schema( shard_name )
     end
   end
 
@@ -27,7 +28,8 @@ namespace :shards do
 
       with_shard( args ) do |shard_name, schema|
         ActiveRecord::Migrator.run(:up, "db/migrate/#{schema}", version)
-        Rake::Task["shards:schema:dump"].invoke( shard_name ) if ActiveRecord::Base.schema_format == :ruby
+
+        dump_schema( shard_name )
       end
     end
 
@@ -38,7 +40,8 @@ namespace :shards do
 
       with_shard( args ) do |shard_name, schema|
         ActiveRecord::Migrator.run(:down, "db/migrate/#{schema}", version)
-        Rake::Task["shards:schema:dump"].invoke( shard_name ) if ActiveRecord::Base.schema_format == :ruby
+
+        dump_schema( shard_name )
       end
     end
   end
@@ -49,7 +52,8 @@ namespace :shards do
 
     with_shard( args ) do |shard_name, schema|
       ActiveRecord::Migrator.rollback("db/migrate/#{schema}", step)
-      Rake::Task["shards:schema:dump"].invoke( shard_name ) if ActiveRecord::Base.schema_format == :ruby
+
+      dump_schema( shard_name )
     end
   end
 
@@ -59,7 +63,8 @@ namespace :shards do
 
     with_shard( args ) do |shard_name, schema|
       ActiveRecord::Migrator.forward("db/migrate/#{schema}", step)
-      Rake::Task["shards:schema:dump"].invoke( shard_name ) if ActiveRecord::Base.schema_format == :ruby
+
+      dump_schema( shard_name )
     end
   end
 
@@ -216,9 +221,13 @@ namespace :shards do
 
     # desc 'Check for pending migrations and load the test schema'
     task :prepare => :environment do
-      Rake::Task[{ :sql  => "shards:test:clone_structure", :ruby => "shards:test:load" }[ActiveRecord::Base.schema_format]].invoke
+      dump_schema
     end
   end
+end
+
+def dump_schema( *args )
+  Rake::Task[{ :sql  => "shards:test:clone_structure", :ruby => "shards:test:load" }[ActiveRecord::Base.schema_format]].invoke(*args)
 end
 
 def active_shard_does_not_implement!( adapter )
@@ -240,11 +249,11 @@ def with_shard( args )
     case args
     when Symbol, String
       args.to_sym
-    when Hash
+    else
       args[ :shard_name ].nil? ? nil : args[ :shard_name ].to_sym
-    when nil
-      nil
     end
+
+  puts "args / shard_name: #{args.inspect} / #{shard_name}"
 
   raise "No shard specified. Please run with shard name, rake task[shard_name]" unless shard_name
   

@@ -59,7 +59,7 @@ module ActiveShard
       if pop_until.nil?
         scope_crumbs.pop
       else
-        (scope_crumbs.size - scope_crumbs.index(pop_until)).times do
+        (scope_crumbs.size - (scope_crumbs.index(pop_until) || (scope_crumbs.size - 1))).times do
           scope_crumbs.pop
         end
       end
