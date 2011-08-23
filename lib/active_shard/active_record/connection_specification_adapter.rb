@@ -17,6 +17,12 @@ module ActiveShard
         shard_definition.connection_spec
       end
 
+      ##### non-connection_spec related methods #####
+
+      def shard_name
+        shard_definition.name
+      end
+
       private
 
         attr_reader :shard_definition

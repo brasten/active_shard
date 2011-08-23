@@ -118,23 +118,30 @@ namespace :shards do
     desc "Dump the database structure to an SQL file"
     task :dump, [:shard_name] => :environment do |t, args|
       ActiveShard.with_environment( :development ) do
-        with_shard( args ) do |shard_name, schema|
-          structure_file_path = "#{Rails.root}/db/#{Rails.env}_#{schema}_structure.sql"
+        defs = active_shard_definitions( args )
 
-          abcs = ActiveShard.shard( shard_name ).connection_adapter
-          case abcs
-          when /mysql/, "oci", "oracle"
-            # We are already connected via with_shard, so just use.
-            #
-            File.open( structure_file_path, "w+" ) { |f| f << ActiveRecord::Base.connection.structure_dump }
-          when "postgresql", "sqlite", "sqlite3", "sqlserver", "firebird"
-            active_shard_does_not_implement!(abcs)
-          else
-            raise "Task not supported by '#{abcs}'"
-          end
+        defs.schemas.each do |schema|
+          shard_definition = defs.by_schema( schema ).first
 
-          if ActiveRecord::Base.connection.supports_migrations?
-            File.open( structure_file_path, "a" ) { |f| f << ActiveRecord::Base.connection.dump_schema_information }
+          with_shard( shard_definition.name ) do
+
+            structure_file_path = "#{Rails.root}/db/#{schema}_structure.sql"
+
+            abcs = ActiveShard.shard( shard_definition.name ).connection_adapter
+            case abcs
+            when /mysql/, "oci", "oracle"
+              # We are already connected via with_shard, so just use.
+              #
+              File.open( structure_file_path, "w+" ) { |f| f << ActiveRecord::Base.connection.structure_dump }
+            when "postgresql", "sqlite", "sqlite3", "sqlserver", "firebird"
+              active_shard_does_not_implement!(abcs)
+            else
+              raise "Task not supported by '#{abcs}'"
+            end
+
+            if ActiveRecord::Base.connection.supports_migrations?
+              File.open( structure_file_path, "a" ) { |f| f << ActiveRecord::Base.connection.dump_schema_information }
+            end
           end
         end
       end
@@ -160,7 +167,7 @@ namespace :shards do
     task :clone => %w(shards:schema:dump shards:test:load)
 
     # desc "Recreate the test databases from the development structure"
-    task :clone_structure => [ "shards:structure:dump", "shards:test:purge" ] do
+    task :clone_structure, [:shard_name] => [ "shards:structure:dump", "shards:test:purge" ] do |t, args|
       ActiveShard.with_environment( :test ) do
         defs = active_shard_definitions( args )
 
@@ -169,9 +176,9 @@ namespace :shards do
 
           case adapter
           when /mysql/
-            ActiveShard.with( shard_definition.name ) do
+            with_shard( shard_definition.name ) do
               ActiveRecord::Base.connection.execute('SET foreign_key_checks = 0')
-              IO.readlines("#{Rails.root}/db/#{Rails.env}_structure.sql").join.split("\n\n").each do |table|
+              IO.readlines("#{Rails.root}/db/#{shard_definition.schema}_structure.sql").join.split("\n\n").each do |table|
                 ActiveRecord::Base.connection.execute(table)
               end
             end
@@ -208,7 +215,7 @@ namespace :shards do
     end
 
     # desc 'Check for pending migrations and load the test schema'
-    task :prepare do
+    task :prepare => :environment do
       Rake::Task[{ :sql  => "shards:test:clone_structure", :ruby => "shards:test:load" }[ActiveRecord::Base.schema_format]].invoke
     end
   end

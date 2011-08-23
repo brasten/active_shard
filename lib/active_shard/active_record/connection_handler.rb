@@ -12,7 +12,6 @@ module ActiveShard
 
       # Initializes a new ConnectionHandler
       #
-      # @param [Array<ShardDefinition>] shard_definitions
       # @param [Hash] options
       # @option options [ShardLookupHandler, #lookup_active_shard] :shard_lookup
       #
