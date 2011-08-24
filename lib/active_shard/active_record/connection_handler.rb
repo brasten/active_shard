@@ -19,7 +19,7 @@ module ActiveShard
         @shard_lookup = options[ :shard_lookup ]
 
         @shard_definitions = []
-        @connection_pools = {}
+        @connection_pools = ConnectionPoolHash.new( self )
         @schema_pools     = {}
       end
 
@@ -117,9 +117,41 @@ module ActiveShard
           schema_name = definition.nil? ? args.shift : definition.schema
           shard_name  = definition.nil? ? args.shift : definition.name
 
-          "#{schema_name.to_s}+#{shard_name.to_s}".to_sym
+          PoolKey.new( schema_name, shard_name )
         end
 
+        class PoolKey
+          attr_reader :schema, :shard
+          
+          def initialize( schema, shard )
+            @schema = schema.nil? ? nil : schema.to_sym
+            @shard  = shard.nil? ? nil : shard.to_sym
+          end
+
+          def hash
+            [self.schema, self.shard].hash
+          end
+
+          def eql?(other)
+            (self.schema == other.schema &&
+              self.shard  == other.shard)
+          end
+        end
+
+        class ConnectionPoolHash < Hash
+          def initialize( connection_handler )
+            @connection_handler = connection_handler
+          end
+
+          def [](val)
+            case val
+            when PoolKey
+              super
+            else
+              @connection_handler.retrieve_connection_pool( val.constantize )
+            end
+          end
+        end
 
     end
   end
