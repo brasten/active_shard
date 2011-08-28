@@ -1,12 +1,71 @@
 namespace :shards do
+
+  desc 'Create the database from config/database.yml for the current Rails.env (use db:create:all to create all dbs in the config)'
+  task :create => :environment do
+
+    # Make the test database at the same time as the development one, if it exists
+    if Rails.env.development?
+      ActiveShard.config.shard_definitions( :test ).each do |definition|
+        create_database(definition)
+      end
+    end
+    ActiveShard.config.shard_definitions( Rails.env.to_sym ).each do |definition|
+      create_database( definition )
+    end
+  end
+
+  def create_database( definition )
+    begin
+      if definition.connection_adapter =~ /sqlite/
+        active_shard_does_not_implement!( definition.connection_adapter )
+      else
+        pool = ActiveShard::ActiveRecord::ConnectionProxyPool.new( definition )
+        pool.connection
+      end
+    rescue
+      case definition.connection_adapter
+      when /mysql/
+        @charset   = ENV['CHARSET']   || 'utf8'
+        @collation = ENV['COLLATION'] || 'utf8_unicode_ci'
+        creation_options = {:charset => (definition.connection_spec['charset'] || @charset), :collation => (definition.connection_spec['collation'] || @collation)}
+        error_class = definition.connection_adapter =~ /mysql2/ ? Mysql2::Error : Mysql::Error
+        access_denied_error = 1045
+        begin
+          sd = ActiveShard::ShardDefinition.new(
+            definition.name, { :schema => definition.schema }.merge( definition.connection_spec ).merge( :database => nil )
+          )
+
+          pool = ActiveShard::ActiveRecord::ConnectionProxyPool.new( sd )
+
+          pool.connection.create_database( definition.connection_database, creation_options )
+
+          ActiveShard::ActiveRecord::ConnectionProxyPool.new( definition ).connection
+        rescue error_class => sqlerr
+          $stderr.puts sqlerr.error
+          $stderr.puts "Couldn't create database for #{definition.inspect}"
+        end
+      when 'postgresql'
+        active_shard_does_not_implement!( 'postgresql' )
+      end
+    else
+      $stderr.puts "#{definition.connection_database} already exists"
+    end
+  end
+
   desc "Migrate the database (options: VERSION=x, VERBOSE=false)."
   task :migrate, [:shard_name] => :environment do |t, args|
-    with_shard( args ) do |shard_name, schema|
-      ActiveRecord::Migration.verbose = ENV["VERBOSE"] ? ENV["VERBOSE"] == "true" : true
-      ActiveRecord::Migrator.migrate("db/migrate/#{schema}/", ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
+    schemas = {}
 
-      dump_schema( shard_name )
+    active_shard_definitions( args ).each do |shard_definition|
+      with_shard( shard_definition.name ) do |shard_name, schema|
+        schemas[schema] = shard_name
+
+        ActiveRecord::Migration.verbose = ENV["VERBOSE"] ? ENV["VERBOSE"] == "true" : true
+        ActiveRecord::Migrator.migrate("db/migrate/#{schema}/", ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
+      end
     end
+
+    schemas.each_pair { |schema, shard| dump_schema( shard ) }
   end
 
   namespace :migrate do
@@ -221,12 +280,16 @@ namespace :shards do
 
     # desc 'Check for pending migrations and load the test schema'
     task :prepare => :environment do
-      dump_schema
+      clone_schema
     end
   end
 end
 
 def dump_schema( *args )
+  Rake::Task[{ :sql  => "shards:structure:dump", :ruby => "shards:schema:dump" }[ActiveRecord::Base.schema_format]].invoke(*args)
+end
+
+def clone_schema( *args )
   Rake::Task[{ :sql  => "shards:test:clone_structure", :ruby => "shards:test:load" }[ActiveRecord::Base.schema_format]].invoke(*args)
 end
 
@@ -252,8 +315,6 @@ def with_shard( args )
     else
       args[ :shard_name ].nil? ? nil : args[ :shard_name ].to_sym
     end
-
-  puts "args / shard_name: #{args.inspect} / #{shard_name}"
 
   raise "No shard specified. Please run with shard name, rake task[shard_name]" unless shard_name
   
