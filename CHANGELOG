@@ -1,3 +1,7 @@
+## 0.2.1 ##
+- additional database.rake tasks
+- fixed bug related to AREL engines and table quotes
+
 ## 0.2.0 ##
 - major refactoring to support multiple environments
 - initial working Railtie implementation
