@@ -23,6 +23,10 @@ module ActiveShard
         @target = target
       end
 
+      def cache
+        yield
+      end
+
       def method_missing( sym, *args, &block )
         raise ::ActiveShard::NoActiveShardError
       end
