@@ -3,43 +3,6 @@ ActiveShard - Multi-schema sharding for ActiveRecord
 
 ActiveShard is a library built primarily for sharding in ActiveRecord. It also supports multiple databases with differing schemas. As with the other sharding libraries for ActiveRecord (there are a few), this library represents the best solution to the authors' sharding needs. If you've been unhappy with other options, ActiveShard might be for you.
 
-
-## CAVEATS ##
-
-### Railtie isn't finished ... ###
-
-... so there are some additional steps you'll need to take to get this working. Specifically:
-
-Add the following to the end of your config/application.rb:
-
-    ActiveShard.config do |c|
-      definitions = ActiveShard::ShardDefinition.from_yaml_file( File.expand_path( '../shards.yml', __FILE__ ) )
-
-      definitions[ Rails.env.to_sym ].each do |shard|
-        c.add_shard( shard )
-      end
-    end
-
-    require 'active_shard/active_record'
-
-    ActiveRecord::Base.send( :include, ActiveShard::ActiveRecord::ShardSupport )
-
-    ActiveRecord::Base.connection_handler =
-      ActiveShard::ActiveRecord::ConnectionHandler.new(
-        ActiveShard.config.shard_definitions,
-        :shard_lookup => ActiveShard::ShardLookupHandler.new( :scope => ActiveShard.scope, :config => ActiveShard.config )
-      )
-    
-Once we complete the ActiveShard Railtie, these lines will not be necessary.
-
-
-### Where are the specs? ###
-
-Good eye. This library is being extracted from an existing project where application-specific tests were written to test the sharding functionality.
-
-Generic and more detailed specs are being written and will be added shortly.
-
-
 ## Design goals ##
 
 The fundamental purpose of ActiveShard is to provide a framework that allows ActiveRecord to connect to multiple databases with multiple different schemas. All other features are a subset of this framework (sharding, replication, etc).
@@ -74,7 +37,7 @@ Install bundle:
     
 Add to config/application.rb, right under "require 'rails/all'":
 
-    require 'active_shard/active_record/railtie'
+    require 'active_shard/railtie'
 
 
 ## Most common usage ##
