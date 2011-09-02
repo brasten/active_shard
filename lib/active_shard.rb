@@ -146,16 +146,18 @@ module ActiveShard
     # @return the return value from the provided block
     #
     def with( scopes={}, &block )
-      ret = nil
+      ret     = nil
+      memento = nil
 
       begin
-        activate_shards( scopes )
+        memento = activate_shards( scopes )
 
         ret = block.call()
       ensure
-        pop_to( scopes )
-        ret
+        pop_to( memento )
       end
+
+      ret
     end
 
     # Pushes active shards onto the scope without a block.

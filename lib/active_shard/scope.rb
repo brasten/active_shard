@@ -33,8 +33,12 @@ module ActiveShard
     # eg: scope.push( :directory => :dir1, :user_data => :db1 )
     #
     # @param [Hash] active_shards
+    # @return [Scope::Memento] memento object to pass back to pop() to
+    #   revert scope state.
     #
     def push( active_shards )
+      previous_state_memento = to_memento()
+
       scope_crumbs << active_shards
 
       # shortcutting #build_current_shards for performance reasons
@@ -44,10 +48,11 @@ module ActiveShard
           current_shards[schema] = active_shards
         end
         current_shards[AnyShard] = active_shards
-
       else
         current_shards.merge!( normalize_keys( active_shards ) )
       end
+
+      previous_state_memento
     end
 
     # Remove the last scope from the stack
@@ -55,16 +60,14 @@ module ActiveShard
     # FIXME: Symbols (for AnySchema) may not roll back properly if multiple
     #        the same symbol is on the stack several times
     #
-    def pop( pop_until=nil )
-      if pop_until.nil?
+    def pop( memento=nil )
+      if memento.nil?
         scope_crumbs.pop
-      else
-        (scope_crumbs.size - (scope_crumbs.index(pop_until) || (scope_crumbs.size - 1))).times do
-          scope_crumbs.pop
-        end
-      end
 
-      build_current_shards( scope_crumbs )
+        build_current_shards( scope_crumbs )
+      else
+        restore_from_memento!( memento )
+      end
     end
 
     # Returns the name of the active shard by the provided schema name.
@@ -115,7 +118,25 @@ module ActiveShard
         ret
       end
 
+      def to_memento
+        Memento.new( scope_crumbs, current_shards )
+      end
+
+      def restore_from_memento!( memento )
+        @scope_crumbs   = memento.scope_crumbs
+        @current_shards = memento.current_shards
+      end
+
       class AnyShard; end
+
+      class Memento
+        attr_reader :scope_crumbs, :current_shards
+
+        def initialize( scope_crumbs, current_shards )
+          @scope_crumbs   = scope_crumbs.dup
+          @current_shards = current_shards.dup
+        end
+      end
 
   end
 end
