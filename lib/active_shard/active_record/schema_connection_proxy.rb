@@ -17,6 +17,7 @@ module ActiveShard
                :quote_table_name,
                :quote_value,
                :disconnect!,
+               :sanitize_limit,
                :quote, :to => :target
 
       def initialize( target )
