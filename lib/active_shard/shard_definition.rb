@@ -47,9 +47,9 @@ module ActiveShard
             shards.each_pair do |shard, spec|
               ( definitions[ environment.to_sym ] ||= [] ) << self.new( shard.to_sym,
                                                                         spec.merge( :schema => schema.to_sym ) )
-            end
-          end
-        end
+            end unless shards.nil?
+          end unless schemas.nil?
+        end unless hash.nil?
 
         definitions
       end
