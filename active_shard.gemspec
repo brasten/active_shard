@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.authors             = ['Brasten Sager', 'Matt Baker']
   s.email               = ['brasten@dashwire.com', 'matt@dashwire.com']
 
-  s.files               = Dir[ 'README.md', 'lib/**/*.rb' ]
+  s.files               = Dir[ 'README.md', 'lib/**/*' ]
   s.require_path        = 'lib'
 
   s.add_dependency      "activesupport", "~> 3.0.0"
